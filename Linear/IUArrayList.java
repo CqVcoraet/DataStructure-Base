@@ -95,14 +95,32 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
 
     @Override
     public T remove(T element) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'remove'");
+        T removed = element;
+        int index = 0;
+        boolean found = false;
+        while (index < size || !found) {
+            if (array[index].equals(element)) {
+                found = true;
+            }
+        }
+        if (!found) {
+            throw new NoSuchElementException("Element is not in the list.");
+        } else {
+            size--;
+            return removed;
+        }
     }
 
     @Override
     public T remove(int index) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'remove'");
+        checkBounds(index);
+        T removed = array[index];
+        array[index] = null;
+        for (int i = index; i < size - 1; i++) {
+            array[i] = array[i + 1];
+        }
+        size--;
+        return removed;
     }
 
     @Override
