@@ -26,8 +26,18 @@ public interface MyMapInterface<K, V> {
      */
     public void put(K key, V value);
 
+    /**
+     * Returns the first key in the map.
+     *
+     * @return the first key in the map
+     */
     public K firstKey();
 
+    /**
+     * Returns the last key in the map.
+     *
+     * @return the last key in the map
+     */
     public K lastKey();
 
     /**

@@ -87,10 +87,10 @@ public class LinkedMap<K, V> implements MyMapInterface<K, V> {
         EntryNode<K, V> current = this.head;
         while (current != null) {
             // Use .equals() for object comparison, and handle potential null keys safely
-            if ((current.key == null && key == null) || (current.key != null && current.key.equals(key))) {
+            if ((current.getKey() == null && key == null) || (current.getKey() != null && current.getKey().equals(key))) {
                 return true;
             }
-            current = current.next;
+            current = current.getNextNode();
         }
         return false;
     }

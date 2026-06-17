@@ -1,5 +1,6 @@
 package Linear;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
@@ -8,6 +9,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
     private T[] array;
     private int size;
     public static final int DEFAULT_CAPACITY = 10;
+    private long listModCount;
 
     public IUArrayList() {
         this(DEFAULT_CAPACITY);
@@ -46,6 +48,8 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
             array[i] = array[i - 1];
         }
         array[0] = element;
+        size++;
+        listModCount++;
     }
 
     @Override
@@ -53,6 +57,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
         resizeIfNeeded();
         array[size] = element;
         size++;
+        listModCount++;
     }
 
     @Override
@@ -62,6 +67,8 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
         }
         int targetIndex = indexOf(target);
         add(targetIndex, element);
+        size++;
+        listModCount++;
     }
 
     @Override
@@ -72,6 +79,8 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
             array[i] = array[i - 1];
         }
         array[index] = element;
+        size++;
+        listModCount++;
     }
 
     @Override
@@ -82,6 +91,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
             array[i] = array[i + 1];
         }
         size--;
+        listModCount++;
         return removed;
     }
 
@@ -90,25 +100,27 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
         T removed = last();
         array[size - 1] = null;
         size--;
+        listModCount++;
         return removed;
     }
 
     @Override
     public T remove(T element) {
-        T removed = element;
-        int index = 0;
-        boolean found = false;
-        while (index < size || !found) {
-            if (array[index].equals(element)) {
-                found = true;
-            }
+        int index = indexOf(element);
+        if (index == -1) {
+            throw new NoSuchElementException();
         }
-        if (!found) {
-            throw new NoSuchElementException("Element is not in the list.");
-        } else {
-            size--;
-            return removed;
+
+        T removed = array[index];
+        size--;
+
+        // Shift elements
+        for (int i = index; i < size; i++) {
+            array[i] = array[i + 1];
         }
+        array[size] = null;
+        listModCount++;
+        return removed;
     }
 
     @Override
@@ -120,6 +132,8 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
             array[i] = array[i + 1];
         }
         size--;
+        array[size] = null;
+        listModCount++;
         return removed;
     }
 
@@ -127,6 +141,7 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
     public void set(int index, T element) {
         checkBounds(index);
         array[index] = element;
+        listModCount++;
     }
 
     @Override
@@ -176,6 +191,21 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
     }
 
     @Override
+    public String toString() {
+        StringBuilder str = new StringBuilder();
+        str.append("[");
+        for (int i = 0; i < size; i++) {
+            str.append(array[i].toString());
+            str.append(", ");
+        }
+        if (!isEmpty()) {
+            str.delete(str.length() - 2, str.length());
+        }
+        str.append("]");
+        return str.toString();
+    }
+
+    @Override
     public Iterator<T> iterator() {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'iterator'");
@@ -191,6 +221,57 @@ public class IUArrayList<T> implements IndexedUnsortedList<T> {
     public ListIterator<T> listIterator(int startingIndex) {
         // TODO Auto-generated method stub
         throw new UnsupportedOperationException("Unimplemented method 'listIterator'");
+    }
+
+    private class ALIterator implements Iterator<T> {
+        private int nextIndex;
+        private long iterModCount;
+        private boolean canRemove;
+
+        public ALIterator() {
+            nextIndex = 0;
+            iterModCount = listModCount;
+            canRemove = false;
+        }
+
+        private void checkConcurrency() {
+            if (iterModCount != listModCount) {
+                throw new ConcurrentModificationException();
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            checkConcurrency();
+            return (nextIndex < size);
+        }
+
+        @Override
+        public T next() {
+            if (!hasNext()) {
+                throw new NoSuchElementException();
+            }
+            nextIndex++;
+            canRemove = true;
+            return array[nextIndex - 1];
+        }
+
+        @Override
+        public void remove() {
+            if (!canRemove) {
+                throw new IllegalStateException();
+            }
+            canRemove = false;
+            for (int i = nextIndex - 1; i < size - 1; i++) {
+                array[i] = array[i + 1];
+            }
+            array[size - 1] = null;
+            size--;
+            nextIndex--;
+            listModCount++;
+            iterModCount++;
+        }
+
     }
     
 }
