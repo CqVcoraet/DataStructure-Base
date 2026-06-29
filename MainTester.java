@@ -128,11 +128,22 @@ public class MainTester extends AbstractTester {
         startButton.setForeground(Color.WHITE);
         startButton.setFocusable(false);
 
+        
+
         welcomePanel.add(welcomePanelTitle);
         welcomePanel.add(startButton);
 
-        mainContainer.add(welcomePanel, "Welcome");
+        // Menu Panel
+        JPanel menuPanel = new JPanel(cardLayout);
+
+        // All Panels
+        mainContainer.add(welcomePanel, "Welcome Panel");
+        mainContainer.add(menuPanel, "Menu Panel");
         cardLayout.show(mainContainer, "Welcome");
+
+        startButton.addActionListener(e -> {
+            cardLayout.show(mainContainer, "Menu Panel");
+        });
 
         frame.setContentPane(mainContainer);
         frame.setVisible(true);
